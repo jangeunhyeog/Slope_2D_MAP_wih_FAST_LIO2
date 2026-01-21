@@ -54,7 +54,8 @@ def generate_launch_description():
         package='rviz2',
         executable='rviz2',
         arguments=['-d', rviz_cfg],
-        condition=IfCondition(rviz_use)
+        condition=IfCondition(rviz_use),
+        parameters=[{'use_sim_time': use_sim_time}]
     )
 
     ld = LaunchDescription()
@@ -68,3 +69,4 @@ def generate_launch_description():
     ld.add_action(rviz_node)
 
     return ld
+    
