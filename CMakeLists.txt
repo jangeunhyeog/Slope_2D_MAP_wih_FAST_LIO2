@@ -15,7 +15,7 @@ endif()
  set(CMAKE_CXX_STANDARD 17) 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -pthread -std=c++0x -std=c++14 -fexceptions")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -pthread -std=c++0x -std=c++14 -fexceptions")
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 message("Current CPU archtecture: ${CMAKE_SYSTEM_PROCESSOR}")
@@ -35,6 +35,7 @@ if(CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
     message("core for MP: 2")
   else()
     add_definitions(-DMP_PROC_NUM=1)
+    message("core for MP: 1")
   endif()
 else()
   add_definitions(-DMP_PROC_NUM=1)
@@ -120,8 +121,15 @@ install(TARGETS fastlio_mapping
   DESTINATION lib/${PROJECT_NAME}
 )
 
+add_executable(elevation_mapping_node src/elevation_mapping_node.cpp)
+ament_target_dependencies(elevation_mapping_node ${dependencies})
+target_link_libraries(elevation_mapping_node ${PCL_LIBRARIES})
+install(TARGETS elevation_mapping_node
+  DESTINATION lib/${PROJECT_NAME}
+)
+
 install(
-  DIRECTORY config launch rviz
+  DIRECTORY config launch rviz rviz_cfg
   DESTINATION share/${PROJECT_NAME}
 )
 

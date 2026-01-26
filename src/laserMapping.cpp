@@ -927,6 +927,7 @@ public:
         sub_imu_ = this->create_subscription<sensor_msgs::msg::Imu>(imu_topic, 10, imu_cbk);
         pubLaserCloudFull_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/cloud_registered", 20);
         pubLaserCloudFull_body_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/cloud_registered_body", 20);
+
         pubLaserCloudEffect_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/cloud_effected", 20);
         pubLaserCloudMap_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/Laser_map", 20);
         pubOdomAftMapped_ = this->create_publisher<nav_msgs::msg::Odometry>("/Odometry", 20);
@@ -1070,6 +1071,7 @@ private:
             if (path_en)                         publish_path(pubPath_, this->now());
             if (scan_pub_en)      publish_frame_world(pubLaserCloudFull_, this->now());
             if (scan_pub_en && scan_body_pub_en) publish_frame_body(pubLaserCloudFull_body_, this->now());
+
             if (effect_pub_en) publish_effect_world(pubLaserCloudEffect_, this->now());
             // if (map_pub_en) publish_map(pubLaserCloudMap_);
 

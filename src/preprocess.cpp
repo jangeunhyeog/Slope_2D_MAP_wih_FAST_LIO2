@@ -1,9 +1,17 @@
 #include "preprocess.h"
 
 #include <pcl/common/common.h>
+#include <omp.h>
 
 #define RETURN0 0x00
 #define RETURN0AND1 0x10
+
+float set_rgb_intensity(uint8_t r, uint8_t g, uint8_t b) {
+    uint32_t rgb = (static_cast<uint32_t>(r) << 16 |
+                    static_cast<uint32_t>(g) << 8 |
+                    static_cast<uint32_t>(b));
+    return *reinterpret_cast<float*>(&rgb);
+}
 
 Preprocess::Preprocess() : feature_enabled(0), lidar_type(AVIA), blind(0.01), point_filter_num(1)
 {
@@ -870,6 +878,9 @@ void Preprocess::give_feature(pcl::PointCloud<PointType>& pl, vector<orgtype>& t
         ap.z = pl[j].z;
         ap.intensity = pl[j].intensity;
         ap.curvature = pl[j].curvature;
+        // Example: Color this point Green (R=0, G=255, B=0)
+        // You can change this to any logic you want!
+        ap.intensity = set_rgb_intensity(0, 255, 0); 
         pl_surf.push_back(ap);
 
         last_surface = -1;
@@ -897,6 +908,9 @@ void Preprocess::give_feature(pcl::PointCloud<PointType>& pl, vector<orgtype>& t
         ap.z /= (j - last_surface);
         ap.intensity /= (j - last_surface);
         ap.curvature /= (j - last_surface);
+        // Example: Color this point Green (R=0, G=255, B=0)
+        // You can change this to any logic you want!
+        ap.intensity = set_rgb_intensity(0, 255, 0); 
         pl_surf.push_back(ap);
       }
       last_surface = -1;
