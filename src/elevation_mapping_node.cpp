@@ -69,6 +69,7 @@ public:
             input_topic, 10, std::bind(&ElevationMappingNode::cloudCallback, this, std::placeholders::_1));
         
         pub_map_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>("/map", 1);
+        pub_elevation_points_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/elevation_points", 1);
         
         // Timer for map publication (1 Hz)
         timer_ = this->create_wall_timer(
@@ -113,6 +114,7 @@ private:
 
     rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr sub_cloud_;
     rclcpp::Publisher<nav_msgs::msg::OccupancyGrid>::SharedPtr pub_map_;
+    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pub_elevation_points_;
     rclcpp::TimerBase::SharedPtr timer_;
 
     void cloudCallback(const sensor_msgs::msg::PointCloud2::SharedPtr msg)
@@ -211,7 +213,7 @@ private:
                 }
             }
             if (valid_z_indices.empty()) continue; 
-
+            
             // --- Ground Identification ---
             // Smallest valid z is ground
             int ground_z_idx = valid_z_indices[0]; 
@@ -272,6 +274,9 @@ private:
             }
         }
 
+        // Initialize PointCloud for visualization
+        pcl::PointCloud<pcl::PointXYZRGB> elevation_pcl;
+
         // Loop 3: Gradient Check & Final Map Population
         for (int y = 0; y < height; y++)
         {
@@ -285,66 +290,89 @@ private:
                     continue;
                 }
 
+                // Add to PointCloud (Center of cell)
+                pcl::PointXYZRGB pt;
+                pt.x = min_grid_x_ * grid_resolution_ + x * grid_resolution_ + grid_resolution_/2.0;
+                pt.y = min_grid_y_ * grid_resolution_ + y * grid_resolution_ + grid_resolution_/2.0;
+                pt.z = current_cell.ground_z;
+
+                bool is_obstacle_final = false;
+
                 if (current_cell.is_obstacle) {
                     map_msg.data[idx] = 100;
-                    continue;
-                }
+                    is_obstacle_final = true;
+                } else {
+                    // --- Plane Fitting (PCA) for Gradient ---
+                    // Gather 8 neighbors + center
+                    Eigen::MatrixXd points(3, 9); 
+                    int count = 0;
+                    
+                    // Add center
+                    points.col(count++) = Eigen::Vector3d(x * grid_resolution_, y * grid_resolution_, current_cell.ground_z);
 
-                // --- Plane Fitting (PCA) for Gradient ---
-                // Gather 8 neighbors + center
-                Eigen::MatrixXd points(3, 9); 
-                int count = 0;
-                
-                // Add center
-                points.col(count++) = Eigen::Vector3d(x * grid_resolution_, y * grid_resolution_, current_cell.ground_z);
-
-                // Add neighbors
-                for (int dy = -1; dy <= 1; dy++) {
-                    for (int dx = -1; dx <= 1; dx++) {
-                        if (dx == 0 && dy == 0) continue;
-                        int nx = x + dx;
-                        int ny = y + dy;
-                        if (nx >=0 && nx < width && ny >=0 && ny < height) {
-                            int n_idx = ny * width + nx;
-                            // Only consider valid data points for plane fitting
-                            if (processed_grid[n_idx].has_data) {
-                                // If neighbor is obstacle, it acts as a high point, contributing to slope
-                                points.col(count++) = Eigen::Vector3d(nx * grid_resolution_, ny * grid_resolution_, processed_grid[n_idx].ground_z);
+                    // Add neighbors
+                    for (int dy = -1; dy <= 1; dy++) {
+                        for (int dx = -1; dx <= 1; dx++) {
+                            if (dx == 0 && dy == 0) continue;
+                            int nx = x + dx;
+                            int ny = y + dy;
+                            if (nx >=0 && nx < width && ny >=0 && ny < height) {
+                                int n_idx = ny * width + nx;
+                                // Only consider valid data points for plane fitting
+                                if (processed_grid[n_idx].has_data) {
+                                    // If neighbor is obstacle, it acts as a high point, contributing to slope
+                                    points.col(count++) = Eigen::Vector3d(nx * grid_resolution_, ny * grid_resolution_, processed_grid[n_idx].ground_z);
+                                }
                             }
+                        }
+                    }
+
+                    if (count < 3) {
+                        // Not enough points to fit plane -> assume flat
+                        map_msg.data[idx] = 0; 
+                    } else {
+                        // Calculate Normal
+                        Eigen::MatrixXd pts = points.leftCols(count);
+                        Eigen::Vector3d centroid = pts.rowwise().mean();
+                        Eigen::MatrixXd centered = pts.colwise() - centroid;
+                        Eigen::Matrix3d cov = centered * centered.transpose();
+                        
+                        Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> solver(cov);
+                        // The eigenvector corresponding to the SMALLEST eigenvalue is the normal
+                        Eigen::Vector3d normal = solver.eigenvectors().col(0); 
+        
+                        // Angle with Z-axis (0,0,1)
+                        // dot(n, z) = n.z()
+                        double angle = std::acos(std::abs(normal.z())); 
+                        double slope_deg = angle * 180.0 / M_PI;
+        
+                        if (slope_deg > max_slope_degree_) {
+                            map_msg.data[idx] = 100; // Too steep
+                            is_obstacle_final = true;
+                        } else {
+                            map_msg.data[idx] = 0;
                         }
                     }
                 }
 
-                if (count < 3) {
-                    // Not enough points to fit plane -> assume flat
-                    map_msg.data[idx] = 0; 
-                    continue;
-                }
-
-                // Calculate Normal
-                Eigen::MatrixXd pts = points.leftCols(count);
-                Eigen::Vector3d centroid = pts.rowwise().mean();
-                Eigen::MatrixXd centered = pts.colwise() - centroid;
-                Eigen::Matrix3d cov = centered * centered.transpose();
-                
-                Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> solver(cov);
-                // The eigenvector corresponding to the SMALLEST eigenvalue is the normal
-                Eigen::Vector3d normal = solver.eigenvectors().col(0); 
-
-                // Angle with Z-axis (0,0,1)
-                // dot(n, z) = n.z()
-                double angle = std::acos(std::abs(normal.z())); 
-                double slope_deg = angle * 180.0 / M_PI;
-
-                if (slope_deg > max_slope_degree_) {
-                    map_msg.data[idx] = 100; // Too steep
+                if (is_obstacle_final) {
+                    pt.r = 255; pt.g = 0; pt.b = 0; // Red for Obstacle
                 } else {
-                    map_msg.data[idx] = 0;
+                    pt.r = 0; pt.g = 255; pt.b = 0; // Green for Ground
                 }
+                elevation_pcl.push_back(pt);
             }
         }
         
         pub_map_->publish(map_msg);
+
+        // Publish PointCloud
+        if (!elevation_pcl.empty()) {
+            sensor_msgs::msg::PointCloud2 pcl_msg;
+            pcl::toROSMsg(elevation_pcl, pcl_msg);
+            pcl_msg.header = map_msg.header;
+            pub_elevation_points_->publish(pcl_msg);
+        }
     }
 };
 
