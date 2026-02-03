@@ -1,13 +1,11 @@
 build/
 install/
 log/
-
+bags/
 *.bag
 *.db
 *.pcd
 *.ply
 *.bin
-
 .vscode/
 .idea/
-
