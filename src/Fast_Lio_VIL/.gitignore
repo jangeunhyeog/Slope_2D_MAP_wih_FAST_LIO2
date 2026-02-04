@@ -1,0 +1,14 @@
+build/
+install/
+log/
+
+*.bag
+*.db
+*.pcd
+*.ply
+*.bin
+*.txt
+
+.vscode/
+.idea/
+

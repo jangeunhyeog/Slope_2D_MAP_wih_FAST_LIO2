@@ -1,0 +1,47 @@
+/**:
+    ros__parameters:
+        # Algorithms parameters
+        feature_extract_enable: false
+        point_filter_num: 3
+        max_iteration: 3
+        filter_size_surf: 0.5
+        filter_size_map: 0.5
+        cube_side_length: 1000.0
+        runtime_pos_log_enable: false
+        map_file_path: "./test.pcd"
+
+        common:
+            lid_topic:  "/pointcloud"    # Driver topic verified
+            imu_topic:  "/imu"           # Driver topic verified
+            time_sync_en: false          # Hardware sync disabled by default
+            time_offset_lidar_to_imu: 0.0 # Hardware sync assumption
+
+        preprocess:
+            lidar_type: 1                # 1: Livox/Non-repetitive (M300 Spec)
+            scan_line: 6                 # Virtual scan lines for non-repetitive pattern (M300 Spec)
+            scan_rate: 10                # 10 Hz (M300 Spec)
+            timestamp_unit: 2            # 2: ns (M300 Spec)
+            blind: 0.05                  # Min range 5cm (M300 Spec)
+
+        mapping:
+            acc_cov: 0.1
+            gyr_cov: 0.1
+            b_acc_cov: 0.0001
+            b_gyr_cov: 0.0001
+            fov_degree: 360.0            # M300 FOV
+            det_range: 50.0              # Max range 50m (M300 Spec)
+            extrinsic_est_en: false      # Manual extrinsics recommended
+            extrinsic_T: [ -0.0194, 0.0287, 0.0452 ] # User provided M300 mounting offset
+            extrinsic_R: [ 1., 0., 0.,
+                           0., 1., 0.,
+                           0., 0., 1.]   # Identity matrix
+
+        publish:
+            path_en:  true
+            scan_publish_en:  true
+            dense_publish_en: true
+            scan_bodyframe_pub_en: true
+
+        pcd_save:
+            pcd_save_en: true
+            interval: -1
