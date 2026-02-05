@@ -2,7 +2,17 @@
 
 This project provides an **optimized version of FAST-LIO2** tailored for real-time mobile robot navigation on uneven terrain. It integrates a lightweight LiDAR Odometry system with a robust **2.5D Elevation Mapping** and **2D Costmap Generation** pipeline.
 
-## 🚀 Key Features & Optimizations
+## 💡 Motivation & Acknowledgments
+This project is heavily inspired by and based on the excellent **FAST-LIO2** from **HKU-Mars**.
+- **Original Repository**: [https://github.com/hku-mars/FAST_LIO](https://github.com/hku-mars/FAST_LIO)
+- **Paper**: [FAST-LIO2: Fast Direct LiDAR-inertial Odometry](https://arxiv.org/abs/2107.06829)
+
+While FAST-LIO2 provides state-of-the-art 3D odometry, we encountered challenges using the raw 3D point cloud directly for **2D navigation on slopes**. A simple 2D projection often misclassifies ramps as obstacles or fails to represent the terrain's traversability correctly.
+**Therefore, we developed this modified version to:**
+1.  **Lightweight the core**: Strip down unused features for better efficiency on mobile robots.
+2.  **Bridge 3D and 2D**: Implement a **2.5D Elevation Mapping** layer that intelligently analyzes **slope and height differences** to generate a clean, reliable 2D Costmap for navigation.
+
+## �🚀 Key Features & Optimizations
 
 ### 1. Lightweight Fast-LIO2
 We have significantly refactored the original Fast-LIO2 codebase to reduce computational load and memory usage for real-time deployment on mobile robots:
