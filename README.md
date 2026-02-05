@@ -20,6 +20,10 @@ Instead of a simple 2D projection, we implement a **2.5D Elevation Map** to hand
   - This allows us to distinguish between **ground**, **obstacles**, and **ceiling/overhangs**.
 - **Ceiling Filtering**: Points above a certain relative height (e.g., 2.0m) are filtered out to prevent indoor ceilings from appearing as obstacles.
 - **Noise Filter**: Cells with fewer than `min_valid_points` are ignored to remove sensor noise.
+- **Memory Optimization (Smart Pruning)**:
+  - **Visited Check**: We employ a `visited` flag to track processed cells. 
+  - **Active Window**: The heavy V-Histogram data is *only* maintained for the active area around the robot. 
+  - **pruning**: Once a cell moves out of the active window, its final state (Occupied/Free + Height) is compressed and archived into a lightweight `static_map`, and the raw histogram data is removed from memory. This ensures memory usage remains stable even during large-scale mapping.
 
 ### 3. Rule-Based 2D Costmap Generation
 A 2D Occupancy Grid (`/total_map`, `/costmap`) is generated from the 2.5D data using specific rules:
