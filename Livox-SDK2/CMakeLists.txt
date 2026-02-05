@@ -13,7 +13,8 @@ if (CMAKE_CROSSCOMPILING)
 endif()
 
 if (UNIX)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -Wno-pragmas")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread -Wno-pragmas")
 endif(UNIX)
 
 add_subdirectory(sdk_core)

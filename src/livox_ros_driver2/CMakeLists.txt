@@ -58,8 +58,8 @@ if(ROS_EDITION STREQUAL "ROS1")
   find_package(PkgConfig)
   pkg_check_modules(APR apr-1)
   if (APR_FOUND)
-    message(${APR_INCLUDE_DIRS})
-    message(${APR_LIBRARIES})
+    # message(${APR_INCLUDE_DIRS})
+    # message(${APR_LIBRARIES})
   endif (APR_FOUND)
 
   ###################################
@@ -232,8 +232,8 @@ else(ROS_EDITION STREQUAL "ROS2")
   find_package(PkgConfig)
   pkg_check_modules(APR apr-1)
   if (APR_FOUND)
-    message(${APR_INCLUDE_DIRS})
-    message(${APR_LIBRARIES})
+    # message(${APR_INCLUDE_DIRS})
+    # message(${APR_LIBRARIES})
   endif (APR_FOUND)
 
   # generate custom msg headers

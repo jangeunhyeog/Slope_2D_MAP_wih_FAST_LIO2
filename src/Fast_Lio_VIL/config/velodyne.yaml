@@ -1,6 +1,6 @@
 /**:
     ros__parameters:
-        feature_extract_enable: false
+
         point_filter_num: 4
         max_iteration: 3
         filter_size_surf: 0.5
@@ -30,7 +30,7 @@
             b_gyr_cov: 0.0001
             fov_degree:    360.0
             det_range:     100.0
-            extrinsic_est_en:  false      # true: enable the online estimation of IMU-LiDAR extrinsic,
+            extrinsic_est_en:  true      # true: enable the online estimation of IMU-LiDAR extrinsic,
             extrinsic_T: [ 0., 0., 0.28]
             extrinsic_R: [ 1., 0., 0., 
                         0., 1., 0., 
@@ -38,6 +38,7 @@
 
         publish:
             path_en:  false
+
             scan_publish_en:  true       # false: close all the point cloud output
             dense_publish_en: true       # false: low down the points number in a global-frame point clouds scan.
             scan_bodyframe_pub_en: true  # true: output the point cloud scans in IMU-body-frame

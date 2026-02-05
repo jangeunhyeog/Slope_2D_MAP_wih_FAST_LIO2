@@ -1,6 +1,6 @@
 /**:
     ros__parameters:
-        feature_extract_enable: false
+
         point_filter_num: 3
         max_iteration: 3
         filter_size_surf: 0.5
@@ -39,8 +39,8 @@
             scan_publish_en:  true       # false: close all the point cloud output
             dense_publish_en: true       # false: low down the points number in a global-frame point clouds scan.
             scan_bodyframe_pub_en: true  # true: output the point cloud scans in IMU-body-frame
-            map_en: true                 # true: publish the map pointcloud
-            effect_map_en: true          # true: publish the effective pointcloud
+
+
 
         pcd_save:
             pcd_save_en: true
